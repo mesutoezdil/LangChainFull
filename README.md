@@ -207,3 +207,7 @@ All examples run against [Nebius AI Studio](https://studio.nebius.ai), which pro
 | `Qwen/Qwen3-32B` | RAG agent (`07`) |
 
 **Known limitation:** Nebius Llama 3.3 rejects responses with more than 1 tool call per turn. `07_rag_agent.py` uses Qwen3-32B instead, which handles multi-topic questions without hitting this error.
+
+## Interview preparation
+
+[`interview.md`](interview.md) covers 73 questions at senior AI/ML engineer level. Topics: LCEL, LangGraph, agents, RAG, memory, middleware, multi-agent patterns, error handling, security, cost optimization, and evaluation. Answers are grounded in the code in this repo.
