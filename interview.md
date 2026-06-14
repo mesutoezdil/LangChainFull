@@ -1,6 +1,6 @@
 # LangChain interview Q&A
 
-Hands-on answers based on LangChain 0.3.x and LangGraph. June 2026.
+Hands-on answers based on `langchain==1.3.9`, `langchain-core==1.4.7`, `langchain-openai==1.3.2`, `langgraph==1.2.5`. June 2026.
 
 ---
 
@@ -297,24 +297,18 @@ LangGraph is a separate library for building stateful, graph-based workflows. It
 **Q: What does a minimal `StateGraph` look like?**
 
 ```python
-from langgraph.graph import StateGraph, END
-from typing import TypedDict, Annotated
-from langchain_core.messages import BaseMessage
-import operator
+from langgraph.graph import StateGraph, MessagesState, START, END
 
-class AgentState(TypedDict):
-    messages: Annotated[list[BaseMessage], operator.add]
-
-graph = StateGraph(AgentState)
+graph = StateGraph(MessagesState)
 graph.add_node("model", call_model)
 graph.add_node("tools", run_tools)
-graph.set_entry_point("model")
+graph.add_edge(START, "model")
 graph.add_conditional_edges("model", should_continue, {"continue": "tools", "end": END})
 graph.add_edge("tools", "model")
 app = graph.compile(checkpointer=MemorySaver())
 ```
 
-`Annotated[list[BaseMessage], operator.add]` means new messages are appended to the list rather than replacing it. That's the key line: get the annotation wrong and you overwrite history on every step.
+`MessagesState` is a built-in TypedDict with a `messages` field wired to the `add_messages` reducer, so new messages append rather than overwrite. **It covers the common case; use a custom TypedDict only when you need fields beyond messages.** `START` replaces the older `set_entry_point()` call and is now the standard way to define the entry node.
 
 ---
 
@@ -625,6 +619,12 @@ State should hold everything the graph needs to route correctly and everything t
 **Q: When does LangGraph make sense over a simple while loop?**
 
 When you need any of: persistence across process restarts, human-in-the-loop interrupts, streaming at the node level, or built-in replay and debugging via LangSmith. A while loop is fine for a quick prototype. In production, you lose the ability to resume after a crash, inspect intermediate states, or pause for human approval. LangGraph gives you all of those for the cost of defining your state schema and wiring nodes.
+
+---
+
+**Q: What is Deep Agents and when would you use it over LangGraph directly?**
+
+Deep Agents is a higher-level framework built on top of LangGraph, introduced in 2025. It adds automatic context compression (so the model never runs out of context window silently), a virtual filesystem for the agent to read and write files, and a more opinionated out-of-the-box structure. Use it when you want a production-ready agent with those features pre-wired and don't need full control over graph topology. Use LangGraph directly when you need custom routing logic, parallel branches, or tight control over state shape. **Most teams that build something non-trivial end up at LangGraph eventually**, even if they start with Deep Agents.
 
 ---
 
