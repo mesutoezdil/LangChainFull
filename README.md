@@ -210,4 +210,4 @@ All examples run against [Nebius AI Studio](https://studio.nebius.ai), which pro
 
 ## Interview preparation
 
-[`interview.md`](interview.md) covers 73 questions at senior AI/ML engineer level. Topics: LCEL, LangGraph, agents, RAG, memory, middleware, multi-agent patterns, error handling, security, cost optimization, and evaluation. Answers are grounded in the code in this repo.
+[`interview.md`](interview.md) covers 76 questions at senior AI/ML engineer level. Topics: LCEL, LangGraph, agents, RAG, memory, middleware, multi-agent patterns, error handling, security, cost optimization, and evaluation. Answers are grounded in the code in this repo.
