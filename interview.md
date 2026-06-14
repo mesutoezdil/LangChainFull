@@ -442,9 +442,47 @@ def select_model(request, handler):
 
 ---
 
-**Q: What are `@before_model` and `@after_model` for?**
+**Q: What are the node-style middleware hooks and what can they return?**
 
-Side-effect hooks that run before and after every model call. They return `None` and don't modify the request or response. Common uses: timing, logging the full message list before a call, tracking token counts, triggering alerts on slow responses. To modify the model call itself, use `@wrap_model_call` instead.
+4 hooks, each scoped differently:
+
+- `@before_agent` — runs once before the agent starts
+- `@before_model` — runs before every model call
+- `@after_model` — runs after every model response
+- `@after_agent` — runs once after the agent completes
+
+Signature: `(state: AgentState, runtime: Runtime) -> dict[str, Any] | None`
+
+**They can return a dict to update agent state**, not just `None`. This means `@before_model` can inject data into state before the model sees it, and `@after_model` can record results. For side-effects only (timing, logging), return `None`. To modify the model invocation itself (swap models, change parameters), use `@wrap_model_call` instead.
+
+---
+
+**Q: What is `@wrap_tool_call` and how does it differ from `@wrap_model_call`?**
+
+`@wrap_model_call` wraps the model invocation. `@wrap_tool_call` wraps each tool call:
+
+```python
+@wrap_tool_call
+def validate_tool(request: ToolCallRequest, handler) -> ToolMessage | Command:
+    if request.tool_call["name"] == "send_payment":
+        # inspect or modify arguments before the tool runs
+        pass
+    return handler(request)
+```
+
+Use it for argument validation, audit logging per tool call, or modifying tool arguments at runtime. The return type is `ToolMessage | Command`: return a `Command` to redirect execution rather than continuing normally.
+
+---
+
+**Q: When do you use `AgentMiddleware` base class instead of decorators?**
+
+When your middleware needs its own state, additional tools, or multiple hooks wired together. `AgentMiddleware` is an abstract base class with 3 class attributes:
+
+- `state_schema` — extend the agent state with custom fields
+- `tools` — register extra tools that come bundled with the middleware
+- `transformers` — register stream transformer factories
+
+A middleware that tracks token budgets across turns, or one that injects a memory retrieval tool, fits `AgentMiddleware`. Simple logging or timing fits a plain decorator.
 
 ---
 
